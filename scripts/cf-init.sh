@@ -6,9 +6,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TEMPLATE_PATH="${REPO_ROOT}/wrangler.toml"
 LOCAL_CONFIG_PATH="${REPO_ROOT}/wrangler.local.toml"
-DB_NAME="${CF_D1_NAME:-qiaomu-blog-db}"
-R2_NAME="${CF_R2_NAME:-qiaomu-blog-images}"
-KV_NAME="${CF_KV_NAME:-qiaomu-blog-cache}"
+DB_NAME="${CF_D1_NAME:-yuyi-ai-notes-db}"
+R2_NAME="${CF_R2_NAME:-yuyi-ai-notes-images}"
+KV_NAME="${CF_KV_NAME:-yuyi-ai-notes-cache}"
 SITE_URL="${SITE_URL:-${NEXT_PUBLIC_SITE_URL:-https://your-domain.com}}"
 SEED_TEMPLATE_PATH="${REPO_ROOT}/db/seed-template.sql"
 WITH_KV=0
@@ -32,7 +32,7 @@ for arg in "$@"; do
       ;;
     *)
       echo "Unknown argument: ${arg}" >&2
-      echo "Usage: npm run cf:init -- [--with-kv] [--site-url=https://your-domain.com] [--db-name=qiaomu-blog-db] [--r2-name=qiaomu-blog-images] [--kv-name=qiaomu-blog-cache]" >&2
+      echo "Usage: npm run cf:init -- [--with-kv] [--site-url=https://your-domain.com] [--db-name=yuyi-ai-notes-db] [--r2-name=yuyi-ai-notes-images] [--kv-name=yuyi-ai-notes-cache]" >&2
       exit 1
       ;;
   esac
