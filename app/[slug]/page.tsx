@@ -14,6 +14,7 @@ import { getRelatedPosts } from '@/lib/related-content'
 import { getPublicContentCacheNamespace } from '@/lib/cache'
 import { getSiteUrl } from '@/lib/site-config'
 import { resolvePostCoverImage } from '@/lib/default-cover-images'
+import { brand } from '@/lib/brand'
 
 // Cloudflare Workers 缓存策略
 export const revalidate = 86400 // 24小时缓存
@@ -25,6 +26,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }) {
   const baseUrl = getSiteUrl()
+  const twitterHandle = brand.social.twitterHandle || undefined
   try {
     const env = await getAppCloudflareEnv()
     const { slug } = await params
@@ -49,7 +51,7 @@ export async function generateMetadata({
       title: post.title,
       description: post.description,
       robots: searchIndexable ? undefined : { index: false, follow: false },
-      authors: [{ name: '向阳乔木' }],
+      authors: [{ name: brand.authorName }],
       alternates: {
         canonical: `${baseUrl}/${post.slug}`,
       },
@@ -59,13 +61,13 @@ export async function generateMetadata({
         type: 'article',
         publishedTime: new Date(post.published_at * 1000).toISOString(),
         modifiedTime: new Date(post.updated_at * 1000).toISOString(),
-        authors: ['向阳乔木'],
+        authors: [brand.authorName],
         images: [{ url: ogImage }],
       },
       twitter: {
         card: 'summary_large_image' as const,
-        site: '@vista8',
-        creator: '@vista8',
+        site: twitterHandle,
+        creator: twitterHandle,
         title: post.title,
         description: post.description || undefined,
         images: [ogImage],
@@ -203,8 +205,17 @@ export default async function PostPage({
             headline: post.title,
             description: post.description || '',
             image: ogImage,
-            author: { '@type': 'Person', name: '向阳乔木', url: 'https://x.com/vista8' },
-            publisher: { '@type': 'Organization', name: '乔木博客', url: baseUrl, logo: { '@type': 'ImageObject', url: `${baseUrl}/icon-512.png` } },
+            author: {
+              '@type': brand.jsonLd.authorType,
+              name: brand.authorName,
+              ...(brand.social.twitterUrl ? { url: brand.social.twitterUrl } : {}),
+            },
+            publisher: {
+              '@type': brand.jsonLd.organizationType,
+              name: brand.siteName,
+              url: baseUrl,
+              logo: { '@type': 'ImageObject', url: `${baseUrl}${brand.jsonLd.logoPath}` },
+            },
             datePublished: new Date(post.published_at * 1000).toISOString(),
             dateModified: new Date(post.updated_at * 1000).toISOString(),
             mainEntityOfPage: { '@type': 'WebPage', '@id': `${baseUrl}/${post.slug}` },

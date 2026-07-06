@@ -4,11 +4,12 @@ import "./globals.css";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { ToastProvider } from "@/components/Toast";
 import { CustomJsInjector } from "@/components/CustomJsInjector";
-import { FONT_CONFIG, THEME_OPTIONS, THEME_STORAGE_KEY, normalizeTheme } from "@/lib/appearance";
+import { FONT_CONFIG, THEME_OPTIONS, THEME_STORAGE_KEY, normalizeTheme, type Theme } from "@/lib/appearance";
 import { getAppCloudflareEnv } from "@/lib/cloudflare";
 import { getSetting } from "@/lib/db";
 import { resolveDefaultSiteCoverImage } from "@/lib/default-cover-images";
 import { getSiteUrl, getSiteUrlObject } from "@/lib/site-config";
+import { brand } from "@/lib/brand";
 
 const geistSans = localFont({
   src: [
@@ -40,10 +41,10 @@ const DEFAULT_SITE_OG_IMAGE = resolveDefaultSiteCoverImage(SITE_URL)
 export const metadata: Metadata = {
   metadataBase: getSiteUrlObject(),
   title: {
-    default: '乔木博客',
-    template: '%s · 乔木博客',
+    default: brand.seo.title,
+    template: brand.seo.titleTemplate,
   },
-  description: '记录思考，分享所学，留住当下。技术、生活、读书笔记的数字花园。',
+  description: brand.seo.description,
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -62,26 +63,26 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    locale: 'zh_CN',
+    locale: brand.seo.locale,
     url: SITE_URL,
-    siteName: '乔木博客',
-    title: '乔木博客',
-    description: '记录思考，分享所学，留住当下。技术、生活、读书笔记的数字花园。',
+    siteName: brand.siteName,
+    title: brand.seo.title,
+    description: brand.seo.description,
     images: [
       {
         url: DEFAULT_SITE_OG_IMAGE,
         width: 1280,
         height: 720,
-        alt: '乔木博客',
+        alt: brand.siteName,
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    site: '@vista8',
-    creator: '@vista8',
-    title: '乔木博客',
-    description: '记录思考，分享所学，留住当下。技术、生活、读书笔记的数字花园。',
+    card: brand.seo.twitterCard,
+    site: brand.social.twitterHandle || undefined,
+    creator: brand.social.twitterHandle || undefined,
+    title: brand.seo.title,
+    description: brand.seo.description,
     images: [DEFAULT_SITE_OG_IMAGE],
   },
 };
@@ -92,8 +93,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let customJs = ''
-  let bodyFont = ''
-  let defaultTheme = 'default'
+  let bodyFont: string = brand.defaultFont
+  let defaultTheme: Theme = brand.defaultTheme
   try {
     const env = await getAppCloudflareEnv()
     if (env?.DB) {
@@ -103,8 +104,8 @@ export default async function RootLayout({
         getSetting(env.DB, 'default_theme'),
       ])
       customJs = customJsValue || ''
-      bodyFont = bodyFontValue || ''
-      defaultTheme = normalizeTheme(defaultThemeValue)
+      bodyFont = bodyFontValue || brand.defaultFont
+      defaultTheme = normalizeTheme(defaultThemeValue || brand.defaultTheme)
     }
   } catch {}
 

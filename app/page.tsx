@@ -5,6 +5,7 @@ import type { SiteCategoryLink, SiteNavLink } from '@/lib/site'
 import { getSiteHeaderData } from '@/lib/site'
 import { HomeClient } from '@/components/HomeClient'
 import { getSiteUrl } from '@/lib/site-config'
+import { brand } from '@/lib/brand'
 
 const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
@@ -60,10 +61,10 @@ export default async function Home({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: '乔木博客',
+            '@type': brand.jsonLd.websiteType,
+            name: brand.siteName,
             url: BASE_URL,
-            description: '记录思考，分享所学，留住当下。技术、生活、读书笔记的数字花园。',
+            description: brand.description,
             potentialAction: {
               '@type': 'SearchAction',
               target: { '@type': 'EntryPoint', urlTemplate: `${BASE_URL}/search?q={search_term_string}` },
@@ -77,10 +78,10 @@ export default async function Home({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'Organization',
-            name: '乔木博客',
+            '@type': brand.jsonLd.organizationType,
+            name: brand.siteName,
             url: BASE_URL,
-            logo: { '@type': 'ImageObject', url: `${BASE_URL}/icon-512.png` },
+            logo: { '@type': 'ImageObject', url: `${BASE_URL}${brand.jsonLd.logoPath}` },
           }),
         }}
       />

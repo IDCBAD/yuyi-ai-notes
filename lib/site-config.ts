@@ -1,5 +1,4 @@
-const DEV_SITE_URL = 'http://localhost:3000'
-const DEFAULT_PRODUCTION_SITE_URL = 'https://blog.qiaomu.ai'
+import { getBrandSiteUrl } from '@/lib/brand'
 
 function parseSiteUrl(value: string): URL | null {
   try {
@@ -38,7 +37,7 @@ export function getSiteUrl(): string {
     }
   }
 
-  return process.env.NODE_ENV === 'development' ? DEV_SITE_URL : DEFAULT_PRODUCTION_SITE_URL
+  return getBrandSiteUrl(process.env.NODE_ENV)
 }
 
 export function getSiteUrlObject(): URL {

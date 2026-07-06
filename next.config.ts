@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 
-void initOpenNextCloudflareForDev();
+void initOpenNextCloudflareForDev({ remoteBindings: false });
 
 const nextConfig: NextConfig = {
   // 图片优化（Cloudflare 有自己的优化）
