@@ -1,11 +1,11 @@
 const DEFAULT_POST_COVER_IMAGES = [
-  '/default-covers/qm-cover-1.jpg',
-  '/default-covers/qm-cover-2.jpg',
-  '/default-covers/qm-cover-3.jpg',
+  '/default-covers/yy-cover-1.png',
+  '/default-covers/yy-cover-2.png',
+  '/default-covers/yy-cover-3.png',
 ] as const
 const DEFAULT_SITE_COVER_IMAGE = DEFAULT_POST_COVER_IMAGES[0]
 
-const FALLBACK_COVER_SEED = 'qmblog-default-cover'
+const DEFAULT_COVER_SEED = 'yuyi-default-cover'
 
 interface CoverSeedInput {
   slug?: string | null
@@ -23,12 +23,12 @@ function normalizeSeedValue(value: string | null | undefined) {
 function buildSeed(input: string | CoverSeedInput) {
   if (typeof input === 'string') {
     const normalized = normalizeSeedValue(input)
-    return normalized || FALLBACK_COVER_SEED
+    return normalized || DEFAULT_COVER_SEED
   }
 
   const slug = normalizeSeedValue(input.slug)
   const title = normalizeSeedValue(input.title)
-  return [slug, title].filter(Boolean).join('::') || FALLBACK_COVER_SEED
+  return [slug, title].filter(Boolean).join('::') || DEFAULT_COVER_SEED
 }
 
 function hashSeed(seed: string) {
@@ -71,4 +71,4 @@ export function resolveDefaultSiteCoverImage(baseUrl?: string) {
   return absolutizeSiteAssetUrl(DEFAULT_SITE_COVER_IMAGE, baseUrl)
 }
 
-export { DEFAULT_POST_COVER_IMAGES, DEFAULT_SITE_COVER_IMAGE }
+export { DEFAULT_COVER_SEED, DEFAULT_POST_COVER_IMAGES, DEFAULT_SITE_COVER_IMAGE }

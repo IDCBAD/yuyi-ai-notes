@@ -9,6 +9,7 @@ import { SearchEntry } from '@/components/SearchEntry'
 import { Pagination } from '@/components/Pagination'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
 import type { HomeProps } from '@/components/HomeClient'
+import { brand, getBrandSocialLinks, getBrandTerminalPrompt, isBrandSocialLinkLabel } from '@/lib/brand'
 import type { SiteNavLink } from '@/lib/site'
 
 const BG = '#1a1c2e'
@@ -34,12 +35,16 @@ function TerminalHeader({
   navLinks: SiteNavLink[]
 }) {
   const defaultLinks = [
-    { label: '~/github', url: 'https://github.com/joeseesun/', openInNewTab: true },
-    { label: '~/twitter', url: 'https://x.com/vista8/', openInNewTab: true },
+    ...getBrandSocialLinks().map((link) => ({ ...link, label: `~/${link.label.toLowerCase()}` })),
     { label: '~/rss', url: '/feed.xml', openInNewTab: false },
   ]
   const links = navLinks.length > 0
-    ? navLinks.map(l => ({ ...l, label: `~/${l.label.toLowerCase()}` }))
+    ? [
+        ...getBrandSocialLinks().map((link) => ({ ...link, label: `~/${link.label.toLowerCase()}` })),
+        ...navLinks
+          .filter((link) => !isBrandSocialLinkLabel(link.label))
+          .map(l => ({ ...l, label: `~/${l.label.toLowerCase()}` })),
+      ]
     : defaultLinks
 
   return (
@@ -55,7 +60,7 @@ function TerminalHeader({
       {/* Left: terminal prompt */}
       <div className="terminal-home-prompt" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <span style={{ width: 10, height: 10, borderRadius: '50%', background: ACCENT, display: 'inline-block', boxShadow: `0 0 10px ${ACCENT}` }} />
-        <Link href="/" style={{ color: MUTED, textDecoration: 'none' }}>qiaomu@blog:~$</Link>
+        <Link href="/" style={{ color: MUTED, textDecoration: 'none' }}>{getBrandTerminalPrompt()}</Link>
         <span style={{ color: FG }}>./serve --port=443</span>
       </div>
 
@@ -174,13 +179,13 @@ export function HomeVariantC({
             overflow: 'hidden',
           }}>
 {`  ┌────────────────────────────────────┐
-  │  QIAOMU BLOG  ·  乔木博客          │
+  │  ${brand.englishName.toUpperCase()}  ·  ${brand.siteName}
   │  ~/posts  —  reading the future     │
   └────────────────────────────────────┘`}
           </div>
           <div className="terminal-banner-meta" style={{ marginTop: 14, fontSize: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ color: ACCENT2 }}>&gt;</span>
-            <span style={{ color: FG }}>乔木博客</span>
+            <span style={{ color: FG }}>{brand.siteName}</span>
             <span style={{ color: MUTED }}>{'//'}</span>
             <span style={{ color: MUTED }}>
               {typed}

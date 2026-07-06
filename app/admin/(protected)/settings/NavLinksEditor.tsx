@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+import { getBrandSocialLinks } from '@/lib/brand'
+
 interface NavLink {
   label: string
   url: string
@@ -15,8 +17,7 @@ interface Props {
 }
 
 const defaultLinks: NavLink[] = [
-  { label: 'GitHub', url: 'https://github.com/joeseesun/', openInNewTab: true },
-  { label: 'Twitter', url: 'https://x.com/vista8/', openInNewTab: true },
+  ...getBrandSocialLinks().map(({ label, url, openInNewTab }) => ({ label, url, openInNewTab })),
   { label: 'About', url: '/about', openInNewTab: false },
   { label: 'RSS', url: '/feed.xml', openInNewTab: false },
 ]

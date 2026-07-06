@@ -9,11 +9,11 @@ export const brand = {
     production: 'https://your-domain.com',
   },
   social: {
-    githubUrl: '',
-    githubLabel: 'TODO',
-    twitterUrl: '',
-    twitterHandle: '',
-    twitterLabel: 'TODO',
+    githubUrl: 'https://github.com/IDCBAD',
+    githubLabel: 'IDCBAD',
+    twitterUrl: 'https://x.com/hook_xiao',
+    twitterHandle: '@hook_xiao',
+    twitterLabel: '@hook_xiao',
   },
   rss: {
     title: '余一的AI观察备忘录',
@@ -37,6 +37,54 @@ export const brand = {
 } as const
 
 export type BrandConfig = typeof brand
+
+export function getBrandTerminalHandle(config: BrandConfig = brand): string {
+  const firstToken = (config.englishName || config.shortName || config.siteName).trim().split(/\s+/)[0] || ''
+  return firstToken.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'blog'
+}
+
+export function getBrandTerminalPrompt(config: BrandConfig = brand): string {
+  return `${getBrandTerminalHandle(config)}@blog:~$`
+}
+
+function getLastUrlSegment(url: string): string {
+  try {
+    const parsed = new URL(url)
+    return parsed.pathname.split('/').filter(Boolean).at(-1) || ''
+  } catch {
+    return ''
+  }
+}
+
+export function getBrandSocialLinks(config: BrandConfig = brand) {
+  const links: Array<{ label: string; displayName: string; url: string; openInNewTab: boolean }> = []
+  if (config.social.githubUrl) {
+    links.push({
+      label: 'GitHub',
+      displayName: config.social.githubLabel || getLastUrlSegment(config.social.githubUrl) || 'GitHub',
+      url: config.social.githubUrl,
+      openInNewTab: true,
+    })
+  }
+  if (config.social.twitterUrl) {
+    links.push({
+      label: 'Twitter/X',
+      displayName:
+        config.social.twitterLabel ||
+        config.social.twitterHandle ||
+        getLastUrlSegment(config.social.twitterUrl) ||
+        'Twitter/X',
+      url: config.social.twitterUrl,
+      openInNewTab: true,
+    })
+  }
+  return links
+}
+
+export function isBrandSocialLinkLabel(label: string): boolean {
+  const normalized = label.trim().toLowerCase().replace(/^~\//, '')
+  return normalized === 'github' || normalized === 'twitter' || normalized === 'twitter/x' || normalized === 'x'
+}
 
 export function getBrandSiteUrl(nodeEnv = process.env.NODE_ENV): string {
   return nodeEnv === 'development' ? brand.siteUrl.development : brand.siteUrl.production

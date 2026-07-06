@@ -6,6 +6,7 @@ import { Menu, X, ChevronDown } from 'lucide-react'
 import { SearchEntry } from './SearchEntry'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
 import { getClientThemePreference, subscribeToThemeChange, type Theme } from '@/lib/appearance'
+import { brand, getBrandSocialLinks, getBrandTerminalPrompt, isBrandSocialLinkLabel } from '@/lib/brand'
 import type { SiteCategoryLink, SiteNavLink } from '@/lib/site'
 
 export type NavLink = SiteNavLink
@@ -19,8 +20,7 @@ interface SiteHeaderProps {
 }
 
 const defaultNavLinks: NavLink[] = [
-  { label: 'GitHub', url: 'https://github.com/joeseesun/', openInNewTab: true },
-  { label: 'Twitter', url: 'https://x.com/vista8/', openInNewTab: true },
+  ...getBrandSocialLinks(),
   { label: 'RSS', url: '/feed.xml', openInNewTab: false },
 ]
 
@@ -36,7 +36,9 @@ export function SiteHeader({
   stickyOnMobile = true,
   initialTheme = 'default',
 }: SiteHeaderProps) {
-  const links = navLinks && navLinks.length > 0 ? navLinks : defaultNavLinks
+  const links = navLinks && navLinks.length > 0
+    ? [...getBrandSocialLinks(), ...navLinks.filter((link) => !isBrandSocialLinkLabel(link.label))]
+    : defaultNavLinks
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(false)
   const categoryRef = useRef<HTMLDivElement>(null)
@@ -99,7 +101,7 @@ export function SiteHeader({
           suppressHydrationWarning
         >
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 8px #4ade80', flexShrink: 0 }} />
-          <span style={{ color: 'var(--editor-muted)' }}>qiaomu@blog:~$</span>
+          <span style={{ color: 'var(--editor-muted)' }}>{getBrandTerminalPrompt()}</span>
           <span style={{ color: 'var(--editor-ink)' }}>./home</span>
         </Link>
       )
@@ -114,7 +116,7 @@ export function SiteHeader({
             className="text-lg tracking-tight text-[var(--editor-ink)] hover:text-[var(--editor-accent)] transition-colors duration-200 font-bold"
             style={{ fontFamily: 'var(--logo-font, "Noto Serif SC", Georgia, serif)' }}
           >
-            乔木博客
+            {brand.siteName}
           </Link>
           <span style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace', fontSize: 11, letterSpacing: '0.15em', color: 'var(--editor-muted)' }}>
             VOL.{vol} · {year}年{month}月
@@ -129,7 +131,7 @@ export function SiteHeader({
         className="text-lg tracking-tight text-[var(--editor-ink)] hover:text-[var(--editor-accent)] transition-colors duration-200 flex-shrink-0 font-bold"
         style={{ fontFamily: 'var(--logo-font, Georgia, "Noto Serif SC", serif)' }}
       >
-        乔木博客
+        {brand.siteName}
       </Link>
     )
   }

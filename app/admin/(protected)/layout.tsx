@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { LogoutButton } from './LogoutButton'
 import { PenLine, ExternalLink } from 'lucide-react'
 import { AdminFooter } from '@/components/AdminFooter'
+import { brand } from '@/lib/brand'
 
 export default async function AdminProtectedLayout({
   children,
@@ -30,7 +31,7 @@ export default async function AdminProtectedLayout({
               className="text-lg tracking-tight text-[var(--editor-ink)] hover:text-[var(--editor-accent)] transition-colors duration-200"
               style={{ fontFamily: 'Georgia, "Noto Serif SC", serif', fontWeight: 500 }}
             >
-              乔木博客
+              {brand.siteName}
             </Link>
             <span className="text-[var(--editor-line)] hidden sm:inline">/</span>
             <span className="text-[var(--stone-gray)] hidden sm:inline">管理后台</span>

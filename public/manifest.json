@@ -1,7 +1,7 @@
 {
-  "name": "乔木博客",
-  "short_name": "乔木博客",
-  "description": "记录思考，分享所学，留住当下。技术、生活、读书笔记的数字花园。",
+  "name": "余一的AI观察备忘录",
+  "short_name": "余一",
+  "description": "记录 AI、Agent、RPA 自动化、FDE、产品化思考、学习笔记和长期项目记录。",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

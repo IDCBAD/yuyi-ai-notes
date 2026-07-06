@@ -10,6 +10,7 @@ import { SearchEntry } from '@/components/SearchEntry'
 import { Pagination } from '@/components/Pagination'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
 import type { HomeProps } from '@/components/HomeClient'
+import { brand, getBrandSocialLinks, isBrandSocialLinkLabel } from '@/lib/brand'
 import type { SiteNavLink } from '@/lib/site'
 
 const ACCENT = '#c44a2a' // editorial red-orange
@@ -38,11 +39,12 @@ function EditorialNavBar({
   navLinks: SiteNavLink[]
 }) {
   const defaultLinks = [
-    { label: 'GitHub', url: 'https://github.com/joeseesun/', openInNewTab: true },
-    { label: 'Twitter', url: 'https://x.com/vista8/', openInNewTab: true },
+    ...getBrandSocialLinks(),
     { label: 'RSS', url: '/feed.xml', openInNewTab: false },
   ]
-  const links = navLinks.length > 0 ? navLinks : defaultLinks
+  const links = navLinks.length > 0
+    ? [...getBrandSocialLinks(), ...navLinks.filter((link) => !isBrandSocialLinkLabel(link.label))]
+    : defaultLinks
   const { vol, month, year } = getIssueInfo()
 
   return (
@@ -126,7 +128,7 @@ export function HomeVariantB({
             fontFamily: '"Noto Serif SC", "Source Han Serif SC", Georgia, serif',
             color: FG,
           }}>
-            乔木<span style={{ color: ACCENT }}>·</span>博客
+            {brand.siteName}
           </h1>
         </Link>
         <div className="editorial-masthead-meta" style={{
@@ -138,7 +140,7 @@ export function HomeVariantB({
           fontFamily: '"JetBrains Mono", ui-monospace, monospace',
           letterSpacing: '0.05em',
         }}>
-          <span>AI · PRODUCT · INDEPENDENT THINKING</span>
+          <span>{brand.englishName.toUpperCase()} · {brand.authorName}</span>
           <span>{posts.length} ARTICLES</span>
         </div>
       </div>
@@ -361,7 +363,7 @@ export function HomeVariantB({
         fontFamily: '"JetBrains Mono", ui-monospace, monospace',
         letterSpacing: '0.1em',
       }}>
-        <span>© {new Date().getFullYear()} 乔木博客</span>
+        <span>© {new Date().getFullYear()} {brand.authorName} · {brand.siteName}</span>
         <span>独立 · 不商业化 · RSS 友好</span>
       </div>
 

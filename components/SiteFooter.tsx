@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { refreshAdminSession, useAdminSession } from '@/lib/admin-session-client'
+import { brand } from '@/lib/brand'
 
 export function SiteFooter() {
   const [open, setOpen] = useState(false)
@@ -60,7 +61,7 @@ export function SiteFooter() {
                 href="/admin"
                 className="hover:text-[var(--editor-ink)] transition-colors duration-150 underline-offset-2 hover:underline"
               >
-                向阳乔木
+                {brand.authorName}
               </Link>
               <span>·</span>
               <Link
@@ -81,7 +82,7 @@ export function SiteFooter() {
               onClick={() => setOpen(true)}
               className="hover:text-[var(--editor-ink)] transition-colors duration-150 underline-offset-2 hover:underline"
             >
-              向阳乔木
+              {brand.authorName}
             </button>
           )}
         </div>

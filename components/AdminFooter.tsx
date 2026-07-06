@@ -1,3 +1,5 @@
+import { brand } from '@/lib/brand'
+
 export function AdminFooter() {
   return (
     <footer className="mt-auto border-t border-[var(--editor-line)] bg-[var(--editor-panel)]">
@@ -5,7 +7,7 @@ export function AdminFooter() {
         <div className="flex items-center justify-center text-xs text-[var(--stone-gray)]">
           <span>© 2026</span>
           <span className="mx-2">·</span>
-          <span>向阳乔木</span>
+          <span>{brand.authorName}</span>
         </div>
       </div>
     </footer>
