@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { authenticateRequest } from '@/lib/admin-auth'
 import { nanoid } from 'nanoid'
+import { canUseLocalUploadStorage, putLocalUploadedFile } from '@/lib/local-upload-storage'
 
 type ImageBucket = {
   put: (
@@ -88,7 +89,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!env?.IMAGES) {
+    const useLocalStorage = canUseLocalUploadStorage(Boolean(env?.IMAGES))
+
+    if (!env?.IMAGES && !useLocalStorage) {
       return NextResponse.json(
         { error: '图片存储未配置，请用 Cloudflare preview/runtime 启动。' },
         { status: 500 }
@@ -130,7 +133,7 @@ export async function POST(req: NextRequest) {
       const fileHash = await calculateHash(file)
       const dedupKey = `${category}/${yyyy}/${mm}/${fileHash}-${sanitizeFilename(file.name)}`
 
-      const existing = await env.IMAGES.get(dedupKey)
+      const existing = env.IMAGES && !useLocalStorage ? await env.IMAGES.get(dedupKey) : null
       if (existing) {
         const encodedKey = dedupKey.split('/').map(encodeURIComponent).join('/')
         const variants = category === 'image' ? buildAssetUrls(encodedKey, cloudflareImagePipeline) : undefined
@@ -171,15 +174,22 @@ export async function POST(req: NextRequest) {
       else if (ext === 'txt') contentType = 'text/plain'
     }
 
-    await env.IMAGES.put(key, file, {
-      httpMetadata: {
+    if (env.IMAGES && !useLocalStorage) {
+      await env.IMAGES.put(key, file, {
+        httpMetadata: {
+          contentType,
+          cacheControl: 'public, max-age=31536000, immutable',
+        },
+        customMetadata: {
+          originalName: file.name,
+        },
+      })
+    } else {
+      await putLocalUploadedFile(key, file, {
         contentType,
-        cacheControl: 'public, max-age=31536000, immutable',
-      },
-      customMetadata: {
         originalName: file.name,
-      },
-    })
+      })
+    }
 
     const encodedKey = key.split('/').map(encodeURIComponent).join('/')
     const variants = category === 'image' ? buildAssetUrls(encodedKey, cloudflareImagePipeline) : undefined

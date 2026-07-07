@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
+import { canUseLocalUploadStorage, getLocalUploadedFile } from '@/lib/local-upload-storage'
 
 type StoredObject = {
   body: ReadableStream | null
@@ -97,6 +98,22 @@ export async function GET(
     .join('/')
 
   const env = (await getAppCloudflareEnv()) as RuntimeEnv
+
+  if (canUseLocalUploadStorage(Boolean(env?.IMAGES))) {
+    try {
+      const file = await getLocalUploadedFile(objectKey)
+      return new Response(file.bytes, {
+        headers: {
+          'content-type': file.contentType,
+          'content-length': String(file.size),
+          'cache-control': 'public, max-age=31536000, immutable',
+          'accept-ranges': 'bytes',
+        },
+      })
+    } catch {
+      return new Response('Not found', { status: 404 })
+    }
+  }
 
   if (!env?.IMAGES) {
     return new Response('Image storage is not configured', { status: 500 })

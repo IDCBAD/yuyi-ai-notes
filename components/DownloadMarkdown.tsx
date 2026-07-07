@@ -1,7 +1,6 @@
 'use client'
 
 import { useToast } from '@/components/Toast'
-import { copyAsWechatArticleFormat, downloadArticleAsPdf } from '@/lib/wechat-copy'
 import { Copy, FileDown } from 'lucide-react'
 import TurndownService from 'turndown'
 
@@ -62,6 +61,7 @@ export function DownloadMarkdown({ title, html }: { title: string; html: string 
 
   const handleCopyWechat = async () => {
     try {
+      const { copyAsWechatArticleFormat } = await import('@/lib/wechat-copy')
       await copyAsWechatArticleFormat(title, html)
       toast.success('已复制公众号格式')
     } catch (error) {
@@ -71,6 +71,7 @@ export function DownloadMarkdown({ title, html }: { title: string; html: string 
 
   const handleDownloadPdf = async () => {
     try {
+      const { downloadArticleAsPdf } = await import('@/lib/wechat-copy')
       await downloadArticleAsPdf(title, html)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '导出 PDF 失败')

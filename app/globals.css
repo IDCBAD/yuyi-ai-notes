@@ -166,6 +166,7 @@ body {
   letter-spacing: 0;
   line-height: 1.25;
   color: var(--article-heading);
+  scroll-margin-top: 5rem;
 }
 
 :is(.novel-prose, .rich-content) h1 {
@@ -316,6 +317,300 @@ body {
   display: block;
   max-width: 100%;
   border-radius: 6px;
+}
+
+.article-crisp-toc {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: visible;
+  color: var(--editor-muted);
+}
+
+.article-crisp-toc__toolbar {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.12rem 0.15rem 0.55rem 0;
+}
+
+.article-crisp-toc__collapse-toggle {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.42rem 0.55rem 0.42rem 0.5rem;
+  background: transparent;
+  color: color-mix(in oklab, var(--editor-muted) 82%, var(--editor-ink));
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.article-crisp-toc__collapse-toggle:hover,
+.article-crisp-toc__collapse-toggle:focus-visible {
+  border-color: color-mix(in oklab, var(--editor-accent) 14%, transparent);
+  background: color-mix(in oklab, var(--editor-accent) 5%, transparent);
+  color: var(--editor-accent);
+}
+
+.article-crisp-toc__collapse-toggle svg:last-child {
+  flex: 0 0 auto;
+  transition: transform 180ms ease;
+}
+
+.article-crisp-toc.is-collapsed .article-crisp-toc__collapse-toggle svg:last-child {
+  transform: rotate(-90deg);
+}
+
+.article-crisp-toc__sound-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 1.55rem;
+  height: 1.55rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--background) 82%, transparent);
+  color: color-mix(in oklab, var(--editor-muted) 78%, transparent);
+  opacity: 0.42;
+  transition:
+    opacity 160ms ease,
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.article-crisp-toc__sound-toggle:hover,
+.article-crisp-toc__sound-toggle:focus-visible,
+.article-crisp-toc__sound-toggle.is-enabled {
+  opacity: 0.86;
+  color: var(--editor-accent);
+}
+
+.article-crisp-toc__sound-toggle:hover,
+.article-crisp-toc__sound-toggle:focus-visible {
+  border-color: color-mix(in oklab, var(--editor-accent) 16%, transparent);
+  background: color-mix(in oklab, var(--editor-accent) 7%, var(--background));
+}
+
+.article-crisp-toc.is-collapsed .article-crisp-toc__rail-layer,
+.article-crisp-toc.is-collapsed .article-crisp-toc__list {
+  display: none;
+}
+
+.page-main.article-page-main {
+  max-width: 92rem;
+}
+
+[data-theme="refined"] .page-main.article-page-main,
+[data-theme="editorial"] .page-main.article-page-main,
+[data-theme="terminal"] .page-main.article-page-main {
+  max-width: 92rem;
+}
+
+@media (min-width: 1024px) {
+  .article-toc-sidebar {
+    position: fixed;
+    top: 7rem;
+    left: max(1.5rem, calc((100vw - 92rem) / 2 + 1.5rem));
+    z-index: 20;
+    width: 260px;
+    max-height: calc(100vh - 8rem);
+    overflow: visible;
+  }
+}
+
+@media (min-width: 1280px) {
+  .article-toc-sidebar {
+    width: 300px;
+  }
+}
+
+.article-crisp-toc__rail-layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  width: 3.25rem;
+  overflow: visible;
+  cursor: grab;
+  touch-action: none;
+}
+
+.article-crisp-toc__rail-layer.is-dragging {
+  cursor: grabbing;
+}
+
+.article-crisp-toc__rail-layer::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 0.75rem;
+  width: 1px;
+  background: color-mix(in oklab, var(--editor-line) 78%, var(--editor-ink));
+}
+
+.article-crisp-toc__ball {
+  position: absolute;
+  left: 0.25rem;
+  z-index: 2;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--background);
+  border-radius: 999px;
+  background: var(--editor-accent);
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--editor-accent) 14%, transparent),
+    0 4px 14px color-mix(in oklab, var(--editor-accent) 28%, transparent);
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.article-crisp-toc__rail-layer:hover .article-crisp-toc__ball,
+.article-crisp-toc__rail-layer.is-dragging .article-crisp-toc__ball {
+  box-shadow:
+    0 0 0 5px color-mix(in oklab, var(--editor-accent) 18%, transparent),
+    0 6px 18px color-mix(in oklab, var(--editor-accent) 34%, transparent);
+}
+
+.article-crisp-toc__tick {
+  display: block;
+  margin-left: 0.75rem;
+  width: calc(var(--toc-tick-base, 1rem) + var(--toc-tick-strength, 0) * 2.55rem);
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(
+    in oklab,
+    var(--editor-accent) calc(var(--toc-tick-strength, 0) * 86%),
+    color-mix(in oklab, var(--editor-line) 82%, var(--editor-ink))
+  );
+  transform-origin: left center;
+  opacity: calc(0.42 + var(--toc-tick-strength, 0) * 0.58);
+  transition:
+    width 220ms ease,
+    background-color 220ms ease,
+    opacity 220ms ease;
+}
+
+.article-crisp-toc__row.is-level-2 .article-crisp-toc__tick {
+  --toc-tick-base: 1.15rem;
+  height: 2.5px;
+}
+
+.article-crisp-toc__row.is-level-3 .article-crisp-toc__tick {
+  --toc-tick-base: 0.72rem;
+  margin-left: 0.95rem;
+  height: 1px;
+  opacity: calc(0.28 + var(--toc-tick-strength, 0) * 0.58);
+}
+
+.article-crisp-toc__tick.is-active {
+  height: 3px;
+}
+
+.article-crisp-toc__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: visible;
+  list-style: none;
+}
+
+.article-crisp-toc__row {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+}
+
+.article-crisp-toc__rail-cell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  min-height: 2.1rem;
+  pointer-events: none;
+}
+
+.article-crisp-toc__item {
+  display: -webkit-box;
+  box-sizing: border-box;
+  width: calc(100% - 0.5rem);
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  padding: 0.42rem 0.45rem 0.42rem 0.65rem;
+  color: var(--editor-muted);
+  font-size: 0.88rem;
+  line-height: 1.38;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.article-crisp-toc__item:hover {
+  background: color-mix(in oklab, var(--editor-accent) 5%, transparent);
+  color: var(--editor-accent);
+}
+
+.article-crisp-toc__row.is-active .article-crisp-toc__item {
+  background: color-mix(in oklab, var(--editor-accent) 7%, transparent);
+  color: var(--editor-accent);
+  font-weight: 600;
+  transform: translateX(0.25rem);
+}
+
+.article-crisp-toc__row.is-level-3 .article-crisp-toc__item {
+  width: calc(100% - 0.75rem);
+  margin-left: 0.45rem;
+  padding-left: 0.85rem;
+  color: color-mix(in oklab, var(--stone-gray) 88%, var(--editor-ink));
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.article-crisp-toc__row.is-level-2 .article-crisp-toc__item {
+  color: color-mix(in oklab, var(--editor-muted) 82%, var(--editor-ink));
+  font-weight: 520;
+}
+
+.article-crisp-toc__row.is-level-3.is-active .article-crisp-toc__item {
+  color: var(--editor-accent);
+  font-weight: 560;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-crisp-toc__ball,
+  .article-crisp-toc__tick,
+  .article-crisp-toc__item {
+    transition: none;
+  }
 }
 
 .novel-prose img:hover {

@@ -15,6 +15,8 @@ import { getPublicContentCacheNamespace } from '@/lib/cache'
 import { getSiteUrl } from '@/lib/site-config'
 import { resolvePostCoverImage } from '@/lib/default-cover-images'
 import { brand } from '@/lib/brand'
+import { prepareArticleHtmlWithToc } from '@/lib/article-toc'
+import { ArticleCrispToc } from '@/components/ArticleCrispToc'
 
 // Cloudflare Workers 缓存策略
 export const revalidate = 86400 // 24小时缓存
@@ -184,6 +186,7 @@ export default async function PostPage({
     ? await getRelatedPosts(db, env, post, 3).catch(() => ({ strategy: 'fts' as const, source: 'rules' as const, results: [] }))
     : { strategy: 'fts' as const, source: 'rules' as const, results: [] }
   const contentContainerId = `post-content-${post.slug}`
+  const { html: articleHtml, toc } = prepareArticleHtmlWithToc(post.html)
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
@@ -195,7 +198,7 @@ export default async function PostPage({
         stickyOnMobile={false}
       />
 
-      <main className="page-main mx-auto w-full max-w-3xl px-4 sm:px-6 flex-1 py-8 sm:py-12">
+      <main className="page-main article-page-main mx-auto grid w-full max-w-[92rem] grid-cols-1 gap-10 px-4 sm:px-6 lg:grid-cols-[260px_minmax(0,48rem)] xl:grid-cols-[300px_minmax(42rem,52rem)_minmax(120px,1fr)] flex-1 py-8 sm:py-12">
         {searchIndexable && (() => {
           const baseUrl = getSiteUrl()
           const ogImage = resolvePostCoverImage(post, { baseUrl })
@@ -239,6 +242,18 @@ export default async function PostPage({
             </>
           )
         })()}
+        <aside className="article-toc-sidebar hidden lg:block">
+          <ArticleCrispToc
+            items={toc.map((item) => ({
+              id: item.id,
+              label: item.text,
+              level: item.level,
+            }))}
+            contentSelector={`#${contentContainerId}`}
+          />
+        </aside>
+
+        <section className="min-w-0 lg:col-start-2">
         <FrontPostAdminBoundary
           slug={post.slug}
           title={post.title}
@@ -295,9 +310,9 @@ export default async function PostPage({
               id={contentContainerId}
               data-admin-edit-trigger
               className="rich-content"
-              dangerouslySetInnerHTML={{ __html: post.html }}
+              dangerouslySetInnerHTML={{ __html: articleHtml }}
             />
-            <TwitterEmbedsEnhancer containerId={contentContainerId} html={post.html} />
+            <TwitterEmbedsEnhancer containerId={contentContainerId} html={articleHtml} />
 
             {related.results.length > 0 && (
               <section className="mt-14 sm:mt-16 border-t border-[var(--editor-line)] pt-8 sm:pt-10">
@@ -352,6 +367,7 @@ export default async function PostPage({
             )}
           </article>
         </FrontPostAdminBoundary>
+        </section>
       </main>
 
       <SiteFooter />
