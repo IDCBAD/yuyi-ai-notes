@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/admin-auth'
 import { getAppCloudflareContext, getAppCloudflareEnv } from '@/lib/cloudflare'
 
@@ -12,7 +12,7 @@ type RouteEnvWithDbResult =
     }
   | {
       ok: false
-      response: NextResponse
+      response: Response
     }
 
 type RouteContextWithDbResult =
@@ -24,15 +24,15 @@ type RouteContextWithDbResult =
     }
   | {
       ok: false
-      response: NextResponse
+      response: Response
     }
 
 export function jsonOk<T>(payload: T, status = 200) {
-  return NextResponse.json(payload, { status })
+  return Response.json(payload, { status })
 }
 
 export function jsonError(error: string, status = 500) {
-  return NextResponse.json({ error }, { status })
+  return Response.json({ error }, { status })
 }
 
 export async function parseJsonBody<T>(

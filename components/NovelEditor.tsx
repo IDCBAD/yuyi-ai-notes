@@ -7,16 +7,11 @@ import {
   ChevronUp,
   Globe,
   Eye,
-  Loader2,
   Lock,
   Link2,
-  Copy,
-  FileDown,
-  Send,
   PanelRightOpen,
   PanelRightClose,
   ImageIcon,
-  WandSparkles,
   X,
 } from 'lucide-react'
 import {
@@ -34,12 +29,7 @@ import {
 import { generatePassword } from '@/lib/password'
 import { InputModal } from '@/components/InputModal'
 import { CategorySelector } from '@/components/CategorySelector'
-import { ImageGenerationModal } from '@/components/ImageGenerationModal'
 import { ImageCropModal } from '@/components/ImageCropModal'
-import { WeChatPublishModal } from '@/components/WeChatPublishModal'
-import { useToast } from '@/components/Toast'
-import { startBackgroundTask } from '@/lib/client-background-task'
-import { AIModal } from '@/lib/ai-modal'
 import {
   COVER_IMAGE_OPTIMIZE_OPTIONS,
   EDITOR_IMAGE_OPTIMIZE_OPTIONS,
@@ -48,21 +38,18 @@ import {
 import {
   createUploadPlaceholderMarker,
   insertGeneratedImageAfterNode,
-  insertGeneratedImageAtPosition,
   insertUploadPlaceholder,
   insertUploadedFileIntoEditor,
   removeUploadPlaceholder,
   replaceImageNodeAtPosition,
   uploadEditorFile,
 } from '@/lib/editor-file-upload'
-import { copyAsWechatArticleFormat, downloadArticleAsPdf } from '@/lib/wechat-copy'
 import {
   extractFilesFromClipboard,
   useEditorAuxiliaryModals,
   useEditorUploadTriggers,
 } from '@/lib/editor-ui'
 import type { EditorImageActionTarget } from '@/lib/resizable-image'
-import { resolvePostCoverImage } from '@/lib/default-cover-images'
 import { buildAutoDescription, normalizePostSlug, sanitizePostSlugInput } from '@/lib/post-utils'
 import { getSiteDisplayUrl } from '@/lib/site-config'
 import { resizeTextareaHeight, useAutoResizeTextarea } from '@/lib/textarea-autosize'
@@ -120,7 +107,6 @@ type DraftMetaState = {
   coverImage: string
 }
 
-type MetaGenerationTarget = 'summary' | 'tags' | 'slug' | 'cover'
 
 export function NovelEditor({ initialData }: NovelEditorProps = {}) {
   // ── Core state ──
@@ -149,20 +135,16 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
   // ── UI state ──
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [publishPanelOpen, setPublishPanelOpen] = useState(false)
-  const [wechatPublishOpen, setWechatPublishOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [pendingMetadataTargets, setPendingMetadataTargets] = useState<MetaGenerationTarget[]>([])
   const [feedback, setFeedback] = useState<SaveFeedback>(null)
   const [saveState, setSaveState] = useState<SaveState>('saved')
   const [lastSavedAt, setLastSavedAt] = useState<number>(Date.now())
-  const [referenceImageTarget, setReferenceImageTarget] = useState<EditorImageActionTarget | null>(null)
   const [cropImageTarget, setCropImageTarget] = useState<EditorImageActionTarget | null>(null)
   const [, setTick] = useState(0) // force re-render for relative time
   const publishPanelRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLTextAreaElement>(null)
-  const toast = useToast()
 
   // Draft save refs
   const draftSaveTimerRef = useRef<number | null>(null)
@@ -267,15 +249,9 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
   })
 
   const {
-    aiModal,
-    closeAiModal,
-    closeImageModal,
     handleInputModalCancel,
     handleInputModalConfirm,
-    imageModal,
     inputModal,
-    openDocumentAIModal,
-    openDocumentImageModal,
   } = useEditorAuxiliaryModals({
     title,
     getDocumentText: () => editorRef.current?.getText({ blockSeparator: '\n\n' }).trim() || '',
@@ -292,13 +268,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
 
   useEditorUploadTriggers(fileInputRef, fileUploadRef)
 
-  const insertGeneratedImage = useCallback((imageUrl: string, alt: string) => {
-    const editor = editorRef.current
-    if (!editor) return
-
-    insertGeneratedImageAtPosition(editor, imageUrl, alt, imageModal.insertPos)
-    closeImageModal()
-  }, [closeImageModal, imageModal.insertPos])
 
   const applyImageActionResult = useCallback((
     target: EditorImageActionTarget,
@@ -546,28 +515,11 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
         markDirty({ coverImage: target.src })
         setFeedback({ type: 'success', message: '已设为封面' })
       },
-      onOpenReferenceImage: (target) => {
-        setReferenceImageTarget(target)
-      },
       onOpenCrop: (target) => {
         setCropImageTarget(target)
       },
     },
   }), [markDirty])
-
-  const setMetadataTargetPending = useCallback((target: MetaGenerationTarget, pending: boolean) => {
-    setPendingMetadataTargets((current) => {
-      if (pending) {
-        return current.includes(target) ? current : [...current, target]
-      }
-      return current.filter((item) => item !== target)
-    })
-  }, [])
-
-  const isMetadataTargetPending = useCallback(
-    (target: MetaGenerationTarget) => pendingMetadataTargets.includes(target),
-    [pendingMetadataTargets],
-  )
 
   // ── File upload ──
   const uploadImageAndGetUrl = async (file: File): Promise<string> => {
@@ -643,107 +595,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
     }
   }
 
-  const handleGenerateMetadata = (target: MetaGenerationTarget) => {
-    const editor = editorRef.current
-    const normalizedTitle = latestTitleRef.current.trim() || title.trim()
-    const content = editor?.getText({ blockSeparator: '\n\n' }).trim() || ''
-
-    if (!normalizedTitle && !content) {
-      setFeedback({ type: 'error', message: '先写标题或正文，再生成内容。' })
-      return
-    }
-
-    if (isMetadataTargetPending(target)) {
-      return
-    }
-
-    setFeedback(null)
-
-    setMetadataTargetPending(target, true)
-
-    startBackgroundTask({
-      toast,
-      errorPrefix: 'AI 生成失败',
-      run: async () => {
-        const res = await fetch('/api/editor/ai-post-metadata', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            target,
-            title: normalizedTitle,
-            content,
-            category,
-            description,
-            tags,
-            currentSlug: normalizePostSlug(slug) || editSlug || '',
-          }),
-        })
-
-        const data = await res.json().catch(() => ({})) as {
-          error?: string
-          value?: string | string[]
-          image?: { url?: string }
-        }
-
-        if (!res.ok) {
-          throw new Error(data.error || 'AI 生成失败')
-        }
-
-        return data
-      },
-      onSuccess: (data) => {
-        if (target === 'summary') {
-          const nextDescription = typeof data.value === 'string' ? data.value.trim() : ''
-          if (!nextDescription) {
-            throw new Error('摘要生成结果为空')
-          }
-          setDescription(nextDescription)
-          markDirty({ description: nextDescription })
-          return
-        }
-
-        if (target === 'tags') {
-          const nextTags = Array.isArray(data.value)
-            ? data.value.map((item) => String(item).trim()).filter(Boolean)
-            : []
-
-          if (nextTags.length === 0) {
-            throw new Error('标签生成结果为空')
-          }
-
-          setTagInput('')
-          setTags(nextTags)
-          markDirty({ tags: nextTags })
-          return
-        }
-
-        if (target === 'slug') {
-          const nextSlug = typeof data.value === 'string' ? normalizePostSlug(data.value) : ''
-          if (!nextSlug) {
-            throw new Error('slug 生成结果为空')
-          }
-
-          setSlug(nextSlug)
-          markDirty({ slug: nextSlug })
-          return
-        }
-
-        const nextCoverImage = typeof data.image?.url === 'string' ? data.image.url : ''
-        if (!nextCoverImage) {
-          throw new Error('封面生成失败')
-        }
-
-        setCoverImage(nextCoverImage)
-        markDirty({ coverImage: nextCoverImage })
-      },
-      onError: (message) => {
-        setFeedback({ type: 'error', message })
-      },
-      onSettled: () => {
-        setMetadataTargetPending(target, false)
-      },
-    })
-  }
 
   // ── Save ──
   const handleSave = async () => {
@@ -839,76 +690,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
     }
   }
 
-  const handleCopyWechat = async () => {
-    const editor = editorRef.current
-    const normalizedTitle = title.trim() || '无标题'
-
-    if (!editor) {
-      toast.error('编辑器还没准备好。')
-      return
-    }
-
-    const content = editor.getText({ blockSeparator: '\n\n' }).trim()
-    const html = editor.getHTML()
-    const hasContent = content || /<(img|video|audio|iframe)\s/i.test(html)
-
-    if (!hasContent) {
-      toast.error('正文还是空的。')
-      return
-    }
-
-    try {
-      await copyAsWechatArticleFormat(normalizedTitle, html)
-      toast.success('已复制公众号格式')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '复制公众号格式失败')
-    }
-  }
-
-  const handleDownloadPdf = async () => {
-    const editor = editorRef.current
-    const normalizedTitle = title.trim() || '无标题'
-
-    if (!editor) {
-      toast.error('编辑器还没准备好。')
-      return
-    }
-
-    const content = editor.getText({ blockSeparator: '\n\n' }).trim()
-    const html = editor.getHTML()
-    const hasContent = content || /<(img|video|audio|iframe)\s/i.test(html)
-
-    if (!hasContent) {
-      toast.error('正文还是空的。')
-      return
-    }
-
-    try {
-      await downloadArticleAsPdf(normalizedTitle, html)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '导出 PDF 失败')
-    }
-  }
-
-  const handleOpenWechatPublish = () => {
-    const editor = editorRef.current
-
-    if (!editor) {
-      toast.error('编辑器还没准备好。')
-      return
-    }
-
-    const content = editor.getText({ blockSeparator: '\n\n' }).trim()
-    const html = editor.getHTML()
-    const hasContent = content || /<(img|video|audio|iframe)\s/i.test(html)
-
-    if (!hasContent) {
-      toast.error('正文还是空的。')
-      return
-    }
-
-    setWechatPublishOpen(true)
-  }
 
   // ── Tag input ──
   const [tagInput, setTagInput] = useState('')
@@ -953,10 +734,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
     saveState === 'error' ? 'text-orange-500' : 'text-[var(--stone-gray)]'
 
   const showSidebar = sidebarOpen
-  const wechatSourceUrl = useMemo(() => {
-    const currentSlug = normalizePostSlug(editSlug || slug)
-    return currentSlug ? `https://${SITE_DISPLAY_URL}/${currentSlug}` : ''
-  }, [editSlug, slug])
 
   return (
     <div className="min-h-screen bg-[var(--editor-app-bg)]">
@@ -1009,50 +786,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleCopyWechat}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="复制公众号格式"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleOpenWechatPublish}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="发布到公众号"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="下载 PDF"
-            >
-              <FileDown className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={(e) => openDocumentAIModal(e.currentTarget)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="Ask AI（基于标题和正文）"
-            >
-              <WandSparkles className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={openDocumentImageModal}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="生成图片"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </button>
 
             {/* Sidebar toggle */}
             <button
@@ -1290,16 +1023,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">标签</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('tags')}
-                    disabled={isMetadataTargetPending('tags')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title="AI 生成标签"
-                    aria-label="AI 生成标签"
-                  >
-                    {isMetadataTargetPending('tags') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {tags.map((tag, idx) => (
@@ -1332,16 +1055,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">摘要</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('summary')}
-                    disabled={isMetadataTargetPending('summary')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title="AI 生成摘要"
-                    aria-label="AI 生成摘要"
-                  >
-                    {isMetadataTargetPending('summary') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
                 </div>
                 <textarea
                   rows={4}
@@ -1361,16 +1074,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">封面图</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('cover')}
-                    disabled={isMetadataTargetPending('cover')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title="AI 生成封面"
-                    aria-label="AI 生成封面"
-                  >
-                    {isMetadataTargetPending('cover') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
                 </div>
                 {coverImage ? (
                   <div className="relative rounded-md overflow-hidden border border-[var(--editor-line)] group" style={{ height: 120 }}>
@@ -1421,16 +1124,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">链接</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('slug')}
-                    disabled={isMetadataTargetPending('slug')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title="AI 生成 slug"
-                    aria-label="AI 生成 slug"
-                  >
-                    {isMetadataTargetPending('slug') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--stone-gray)] shrink-0">slug:</span>
@@ -1466,47 +1159,9 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
         </aside>
       </div>
 
-      <WeChatPublishModal
-        isOpen={wechatPublishOpen}
-        onClose={() => setWechatPublishOpen(false)}
-        title={title.trim() || '无标题'}
-        html={editorRef.current?.getHTML() || ''}
-        defaultDigest={description}
-        defaultSourceUrl={wechatSourceUrl}
-        defaultCoverImageUrl={resolvePostCoverImage({
-          cover_image: coverImage,
-          slug: normalizePostSlug(slug) || editSlug || title,
-          title,
-        })}
-      />
 
       <InputModal open={inputModal.open} title={inputModal.title} placeholder={inputModal.placeholder} onConfirm={handleInputModalConfirm} onCancel={handleInputModalCancel} />
 
-      <ImageGenerationModal
-        open={imageModal.open}
-        contextText={imageModal.contextText}
-        historyScope="admin-editor"
-        closeOnGenerate={false}
-        onClose={closeImageModal}
-        onInsert={insertGeneratedImage}
-      />
-
-      <ImageGenerationModal
-        open={Boolean(referenceImageTarget)}
-        contextText=""
-        historyScope="admin-editor"
-        referenceImageUrl={referenceImageTarget?.src}
-        allowReplace
-        defaultPlacementMode="replace"
-        closeOnGenerate={false}
-        generationMode="foreground"
-        onClose={() => setReferenceImageTarget(null)}
-        onInsert={(imageUrl, alt, placementMode) => {
-          if (!referenceImageTarget) return
-          applyImageActionResult(referenceImageTarget, imageUrl, alt, placementMode ?? 'replace')
-          setReferenceImageTarget(null)
-        }}
-      />
 
       <ImageCropModal
         open={Boolean(cropImageTarget)}
@@ -1523,25 +1178,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
         }}
       />
 
-      {editorRef.current && (
-        <AIModal
-          editor={editorRef.current}
-          isOpen={aiModal.open}
-          onClose={closeAiModal}
-          selectedText={aiModal.selectedText}
-          position={aiModal.position}
-          selectionRange={aiModal.selectionRange}
-          initialContext={aiModal.initialContext}
-          documentTitle={aiModal.documentTitle}
-          documentText={aiModal.documentText}
-          historyScope="admin-editor"
-          onApplyTitle={(nextTitle) => {
-            latestTitleRef.current = nextTitle
-            setTitle(nextTitle)
-            markDirty()
-          }}
-        />
-      )}
     </div>
   )
 }

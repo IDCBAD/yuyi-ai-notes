@@ -2,7 +2,7 @@
 // 密码存储在服务端，不暴露给客户端
 
 import { nanoid } from 'nanoid'
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 
 interface AdminAuthConfig {

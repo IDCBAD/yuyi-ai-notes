@@ -258,7 +258,7 @@ export function PostRow({ post, categories }: PostRowProps) {
   return (
     <>
       {/* 桌面端 */}
-      <div className="hidden md:grid grid-cols-[50px_1fr_120px_90px_200px] gap-3 px-5 py-3 hover:bg-[var(--editor-panel)] transition-colors items-center">
+      <div className="hidden md:grid grid-cols-[50px_minmax(0,1fr)_180px_110px_260px] gap-3 px-5 py-3 hover:bg-[var(--editor-panel)] transition-colors items-center">
         {/* 状态列 */}
         <div className="flex flex-col items-center gap-1.5">
           {/* 状态圆点 */}

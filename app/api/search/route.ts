@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { searchPostsWithStrategy } from '@/lib/related-content'
 
@@ -7,18 +7,18 @@ export async function GET(req: NextRequest) {
     const query = req.nextUrl.searchParams.get('q')
 
     if (!query || !query.trim()) {
-      return NextResponse.json({ results: [] })
+      return Response.json({ results: [] })
     }
 
     const env = await getAppCloudflareEnv()
 
     if (!env?.DB) {
-      return NextResponse.json({ results: [] })
+      return Response.json({ results: [] })
     }
 
     const result = await searchPostsWithStrategy(env.DB, env, query.trim(), { limit: 50 })
 
-    return NextResponse.json({
+    return Response.json({
       strategy: result.strategy,
       source: result.source,
       results: result.results.map((p) => ({
@@ -32,6 +32,6 @@ export async function GET(req: NextRequest) {
     })
   } catch (error) {
     console.error('Search error:', error)
-    return NextResponse.json({ results: [] })
+    return Response.json({ results: [] })
   }
 }

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { canUseLocalUploadStorage, getLocalUploadedFile } from '@/lib/local-upload-storage'
 

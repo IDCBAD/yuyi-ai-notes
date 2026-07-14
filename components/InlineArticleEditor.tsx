@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
-import { ImageIcon, WandSparkles } from 'lucide-react'
 import {
   EditorContent,
   EditorInstance,
@@ -17,14 +16,11 @@ import {
 import { InputModal } from '@/components/InputModal'
 import { CategorySelector } from '@/components/CategorySelector'
 import { DownloadMarkdown } from '@/components/DownloadMarkdown'
-import { ImageGenerationModal } from '@/components/ImageGenerationModal'
 import { ImageCropModal } from '@/components/ImageCropModal'
-import { AIModal } from '@/lib/ai-modal'
 import { EDITOR_IMAGE_OPTIMIZE_OPTIONS, optimizeImageForUpload } from '@/lib/client-image'
 import {
   createUploadPlaceholderMarker,
   insertGeneratedImageAfterNode,
-  insertGeneratedImageAtPosition,
   insertUploadPlaceholder,
   insertUploadedFileIntoEditor,
   removeUploadPlaceholder,
@@ -83,7 +79,6 @@ export function InlineArticleEditor({
   const [uploadingFile, setUploadingFile] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [charCount, setCharCount] = useState(0)
-  const [referenceImageTarget, setReferenceImageTarget] = useState<EditorImageActionTarget | null>(null)
   const [cropImageTarget, setCropImageTarget] = useState<EditorImageActionTarget | null>(null)
 
   const checkDirty = useCallback((editor: EditorInstance, overrides?: {
@@ -175,15 +170,9 @@ export function InlineArticleEditor({
   }
 
   const {
-    aiModal,
-    closeAiModal,
-    closeImageModal,
     handleInputModalCancel,
     handleInputModalConfirm,
-    imageModal,
     inputModal,
-    openDocumentAIModal,
-    openDocumentImageModal,
   } = useEditorAuxiliaryModals({
     title,
     getDocumentText: () => editorRef.current?.getText({ blockSeparator: '\n\n' }).trim() || '',
@@ -294,14 +283,6 @@ export function InlineArticleEditor({
     }
   }
 
-  const insertGeneratedImage = useCallback((imageUrl: string, alt: string) => {
-    const editor = editorRef.current
-    if (!editor) return
-    insertGeneratedImageAtPosition(editor, imageUrl, alt, imageModal.insertPos)
-
-    checkDirty(editor)
-    closeImageModal()
-  }, [checkDirty, closeImageModal, imageModal.insertPos])
 
   const imageExtensions = useMemo(() => createEditorExtensions({
     imageActions: {
@@ -312,9 +293,6 @@ export function InlineArticleEditor({
         }
         setFeedback({ type: 'success', message: '已设为封面，记得保存' })
         window.setTimeout(() => setFeedback((current) => current?.type === 'success' ? null : current), 1600)
-      },
-      onOpenReferenceImage: (target) => {
-        setReferenceImageTarget(target)
       },
       onOpenCrop: (target) => {
         setCropImageTarget(target)
@@ -392,24 +370,6 @@ export function InlineArticleEditor({
             {charCount.toLocaleString()} 字
           </span>
         )}
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={(e) => openDocumentAIModal(e.currentTarget)}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]"
-            title="Ask AI（基于标题和正文）"
-          >
-            <WandSparkles className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={openDocumentImageModal}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]"
-            title="生成图片"
-          >
-            <ImageIcon className="h-3.5 w-3.5" />
-          </button>
-        </div>
         {feedback ? (
           <span className={`font-medium ${feedback.type === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>
             {feedback.message}
@@ -544,30 +504,6 @@ export function InlineArticleEditor({
         onCancel={handleInputModalCancel}
       />
 
-      <ImageGenerationModal
-        open={imageModal.open}
-        contextText={imageModal.contextText}
-        historyScope="inline-article"
-        onClose={closeImageModal}
-        onInsert={insertGeneratedImage}
-      />
-
-      <ImageGenerationModal
-        open={Boolean(referenceImageTarget)}
-        contextText=""
-        historyScope="inline-article"
-        referenceImageUrl={referenceImageTarget?.src}
-        allowReplace
-        defaultPlacementMode="replace"
-        closeOnGenerate={false}
-        generationMode="foreground"
-        onClose={() => setReferenceImageTarget(null)}
-        onInsert={(imageUrl, alt, placementMode) => {
-          if (!referenceImageTarget) return
-          applyImageActionResult(referenceImageTarget, imageUrl, alt, placementMode ?? 'replace')
-          setReferenceImageTarget(null)
-        }}
-      />
 
       <ImageCropModal
         open={Boolean(cropImageTarget)}
@@ -584,28 +520,6 @@ export function InlineArticleEditor({
         }}
       />
 
-      {editorRef.current && (
-        <AIModal
-          editor={editorRef.current}
-          isOpen={aiModal.open}
-          onClose={closeAiModal}
-          selectedText={aiModal.selectedText}
-          position={aiModal.position}
-          selectionRange={aiModal.selectionRange}
-          initialContext={aiModal.initialContext}
-          documentTitle={aiModal.documentTitle}
-          documentText={aiModal.documentText}
-          historyScope="inline-article"
-          onApplyTitle={(nextTitle) => {
-            setTitle(nextTitle)
-            if (titleRef.current) {
-              titleRef.current.value = nextTitle
-              autoResizeTitle(titleRef.current)
-            }
-            if (editorRef.current) checkDirty(editorRef.current, { title: nextTitle })
-          }}
-        />
-      )}
     </>
   )
 }

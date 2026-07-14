@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { authenticateRequest } from '@/lib/admin-auth'
 import { nanoid } from 'nanoid'
@@ -86,13 +86,13 @@ export async function POST(req: NextRequest) {
     const isAuthenticated = await authenticateRequest(req, env?.DB)
 
     if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const useLocalStorage = canUseLocalUploadStorage(Boolean(env?.IMAGES))
 
     if (!env?.IMAGES && !useLocalStorage) {
-      return NextResponse.json(
+      return Response.json(
         { error: '图片存储未配置，请用 Cloudflare preview/runtime 启动。' },
         { status: 500 }
       )
@@ -102,18 +102,18 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file')
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: '缺少文件' }, { status: 400 })
+      return Response.json({ error: '缺少文件' }, { status: 400 })
     }
 
     // Check allowed file types (allow unknown types with common extensions)
     const ext = file.name.split('.').pop()?.toLowerCase() || ''
     const knownExts = ['zip', 'rar', '7z', 'epub', 'mobi', 'azw', 'azw3', 'pdf', 'txt', 'mp3', 'mp4', 'wav', 'ogg', 'webm', 'mov', 'flac', 'aac']
     if (!ALL_ALLOWED.includes(file.type) && !file.type.startsWith('image/') && !knownExts.includes(ext)) {
-      return NextResponse.json({ error: `不支持的文件类型: ${file.type}` }, { status: 400 })
+      return Response.json({ error: `不支持的文件类型: ${file.type}` }, { status: 400 })
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
+      return Response.json(
         { error: '文件不能超过 100MB' },
         { status: 400 }
       )
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       if (existing) {
         const encodedKey = dedupKey.split('/').map(encodeURIComponent).join('/')
         const variants = category === 'image' ? buildAssetUrls(encodedKey, cloudflareImagePipeline) : undefined
-        return NextResponse.json({
+        return Response.json({
           success: true,
           key: dedupKey,
           url: `/api/images/${encodedKey}`,
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
     const encodedKey = key.split('/').map(encodeURIComponent).join('/')
     const variants = category === 'image' ? buildAssetUrls(encodedKey, cloudflareImagePipeline) : undefined
 
-    return NextResponse.json({
+    return Response.json({
       success: true,
       key,
       url: `/api/images/${encodedKey}`,
@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('Upload error:', error)
-    return NextResponse.json(
+    return Response.json(
       { error: '文件上传失败: ' + (error as Error).message },
       { status: 500 }
     )

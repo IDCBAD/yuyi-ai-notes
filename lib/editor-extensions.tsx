@@ -47,7 +47,6 @@ import {
   Heading2,
   Heading3,
   Highlighter,
-  ImagePlus,
   List,
   ListOrdered,
   MoreHorizontal,
@@ -55,7 +54,6 @@ import {
   Quote,
   RemoveFormatting,
   Sigma,
-  WandSparkles,
 } from 'lucide-react'
 import { TwitterNode } from './twitter-extension'
 import { ResizableImage, type ResizableImageActionHandlers } from './resizable-image'
@@ -64,11 +62,7 @@ import { AudioNode } from './audio-extension'
 import { VideoNode } from './video-extension'
 import {
   type InputModalDetail,
-  type TriggerAIModalDetail,
-  type TriggerImageGenerationDetail,
-  TRIGGER_AI_MODAL_EVENT,
   TRIGGER_FILE_UPLOAD_EVENT,
-  TRIGGER_IMAGE_GENERATION_EVENT,
   TRIGGER_IMAGE_UPLOAD_EVENT,
   TRIGGER_INPUT_MODAL_EVENT,
 } from './editor-events'
@@ -266,16 +260,12 @@ const BG_COLORS = [
 ]
 
 export {
-  TRIGGER_AI_MODAL_EVENT,
   TRIGGER_FILE_UPLOAD_EVENT,
-  TRIGGER_IMAGE_GENERATION_EVENT,
   TRIGGER_IMAGE_UPLOAD_EVENT,
   TRIGGER_INPUT_MODAL_EVENT,
 } from './editor-events'
 export type {
   InputModalDetail,
-  TriggerAIModalDetail,
-  TriggerImageGenerationDetail,
 } from './editor-events'
 
 export const suggestionItems = createSuggestionItems([
@@ -289,22 +279,6 @@ export const suggestionItems = createSuggestionItems([
   { title: '代码块', description: '插入一段多行代码。', searchTerms: ['code', 'snippet', 'codeblock'], icon: <CommandIcon label="</>" />, command: ({ editor, range }) => { editor.chain().focus().deleteRange(range).toggleCodeBlock().run() } },
   { title: '表格', description: '插入一个 3×3 的表格。', searchTerms: ['table', 'grid'], icon: <CommandIcon label="▦" />, command: ({ editor, range }) => { editor.chain().focus().deleteRange(range).insertContent(createDefaultTableContent()).run() } },
   { title: '分隔线', description: '用一条线把内容切成两个段落。', searchTerms: ['divider', 'hr', 'line'], icon: <CommandIcon label="—" />, command: ({ editor, range }) => { editor.chain().focus().deleteRange(range).setHorizontalRule().run() } },
-  {
-    title: '生成图片',
-    description: '调用 AI 生图并插入当前位置。',
-    searchTerms: ['generate', 'image', 'ai', 'illustration', '生图', '生成图片', '插图', 'mondo'],
-    icon: <CommandIcon label="AI" />,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).run()
-
-      window.dispatchEvent(new CustomEvent<TriggerImageGenerationDetail>(TRIGGER_IMAGE_GENERATION_EVENT, {
-        detail: {
-          insertPos: range.from,
-          selectedText: '',
-        },
-      }))
-    },
-  },
   {
     title: '图片',
     description: '从本地上传图片。',
@@ -600,59 +574,6 @@ export function FormattingBubble() {
 
   if (!editor) return null
 
-  const openAIModal = () => {
-    const { from, to } = editor.state.selection
-    const selectedText = editor.state.doc.textBetween(from, to, '\n').trim()
-
-    if (!selectedText) return
-
-    // 获取选中文本的位置
-    const { view } = editor
-    const start = view.coordsAtPos(from)
-    const end = view.coordsAtPos(to)
-
-    // 计算 modal 位置（选中文本下方居中）
-    const position = {
-      top: end.bottom + 8,
-      left: (start.left + end.right) / 2,
-    }
-
-    // 触发事件打开 AI Modal
-    window.dispatchEvent(
-      new CustomEvent<TriggerAIModalDetail>(TRIGGER_AI_MODAL_EVENT, {
-        detail: {
-          selectedText,
-          position,
-          selectionRange: { from, to },
-        },
-      })
-    )
-
-    // 关闭 Bubble Menu - 清除选区会自动隐藏
-    setTimeout(() => {
-      editor.commands.setTextSelection(to)
-    }, 50)
-  }
-
-  const openImageGenerationModal = () => {
-    const { from, to } = editor.state.selection
-    const selectedText = editor.state.doc.textBetween(from, to, '\n').trim()
-
-    if (!selectedText) return
-
-    window.dispatchEvent(
-      new CustomEvent<TriggerImageGenerationDetail>(TRIGGER_IMAGE_GENERATION_EVENT, {
-        detail: {
-          insertPos: to,
-          selectedText,
-        },
-      }),
-    )
-
-    setTimeout(() => {
-      editor.commands.setTextSelection(to)
-    }, 50)
-  }
 
   const currentTextOption = TEXT_OPTIONS.find((o) => o.isActive(editor))
   const currentColor = (editor.getAttributes('textStyle').color as string | undefined) ?? ''
@@ -672,23 +593,6 @@ export function FormattingBubble() {
     >
       {/* ── 工具栏（始终可见）── */}
       <div className="flex items-center gap-0.5 p-1">
-
-        {/* Ask AI */}
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={openAIModal}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] hover:bg-[var(--editor-accent)]/15"
-        >
-          <WandSparkles className="h-3.5 w-3.5" />
-          Ask AI
-        </button>
-
-        <BubbleIconButton label="生成图片" onClick={openImageGenerationModal}>
-          <ImagePlus className="h-4 w-4" />
-        </BubbleIconButton>
-
-        <div className="mx-0.5 h-5 w-px bg-[var(--editor-line)]" />
 
         {/* Text type selector */}
         <button

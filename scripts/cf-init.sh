@@ -152,8 +152,6 @@ cat <<EOF
   2. 设置线上 secrets:
      npx wrangler secret put ADMIN_PASSWORD -c ${LOCAL_CONFIG_PATH}
      npx wrangler secret put ADMIN_TOKEN_SALT -c ${LOCAL_CONFIG_PATH}
-     npx wrangler secret put AI_CONFIG_ENCRYPTION_SECRET -c ${LOCAL_CONFIG_PATH}
-     npx wrangler secret put AI_API_KEY -c ${LOCAL_CONFIG_PATH}   # 如果你要启用 AI
   3. 首次初始化已写入默认主题、字体和导航
   4. 生成类型: npm run cf-typegen
   5. 部署: npm run deploy

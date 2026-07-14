@@ -4,7 +4,7 @@ import { useToast } from '@/components/Toast'
 import { mergeAttributes } from '@tiptap/core'
 import Image, { type ImageOptions } from '@tiptap/extension-image'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
-import { AlignCenter, AlignLeft, Copy, Crop, Download, ImagePlus, MoreHorizontal, WandSparkles } from 'lucide-react'
+import { AlignCenter, AlignLeft, Copy, Crop, Download, ImagePlus, MoreHorizontal } from 'lucide-react'
 import { UploadImagesPlugin } from 'novel'
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -20,7 +20,6 @@ export interface EditorImageActionTarget {
 
 export interface ResizableImageActionHandlers {
   onOpenCrop?: (target: EditorImageActionTarget) => void
-  onOpenReferenceImage?: (target: EditorImageActionTarget) => void
   onSetCover?: (target: EditorImageActionTarget) => void
 }
 
@@ -260,17 +259,6 @@ function ResizableImageView(props: any) {
             <span>居中对齐</span>
           </button>
           <div className="my-1 h-px bg-[var(--editor-line)]" />
-          <button
-            type="button"
-            onClick={() => {
-              imageActions?.onOpenReferenceImage?.(imageTarget)
-              closeMenu()
-            }}
-            className="editor-image-menu-item"
-          >
-            <WandSparkles className="h-4 w-4" />
-            <span>参考生图</span>
-          </button>
           <button
             type="button"
             onClick={() => {

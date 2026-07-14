@@ -1,7 +1,5 @@
 'use client'
 
-import { useToast } from '@/components/Toast'
-import { Copy, FileDown } from 'lucide-react'
 import TurndownService from 'turndown'
 
 const URL_ATTRIBUTES = [
@@ -39,7 +37,6 @@ function absolutizeHtmlUrls(html: string) {
 }
 
 export function DownloadMarkdown({ title, html }: { title: string; html: string }) {
-  const toast = useToast()
 
   const handleDownload = () => {
     const td = new TurndownService({
@@ -59,24 +56,6 @@ export function DownloadMarkdown({ title, html }: { title: string; html: string 
     URL.revokeObjectURL(url)
   }
 
-  const handleCopyWechat = async () => {
-    try {
-      const { copyAsWechatArticleFormat } = await import('@/lib/wechat-copy')
-      await copyAsWechatArticleFormat(title, html)
-      toast.success('已复制公众号格式')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '复制公众号格式失败')
-    }
-  }
-
-  const handleDownloadPdf = async () => {
-    try {
-      const { downloadArticleAsPdf } = await import('@/lib/wechat-copy')
-      await downloadArticleAsPdf(title, html)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '导出 PDF 失败')
-    }
-  }
 
   return (
     <span className="inline-flex items-center gap-1">
@@ -90,20 +69,6 @@ export function DownloadMarkdown({ title, html }: { title: string; html: string 
           <polyline points="7 10 12 15 17 10" />
           <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
-      </button>
-      <button
-        onClick={handleCopyWechat}
-        title="复制公众号格式"
-        className="inline-flex items-center justify-center rounded p-1 text-[var(--stone-gray)] hover:text-[var(--editor-accent)] hover:bg-[var(--editor-accent)]/8 transition-colors"
-      >
-        <Copy className="h-3.5 w-3.5" />
-      </button>
-      <button
-        onClick={handleDownloadPdf}
-        title="下载 PDF"
-        className="inline-flex items-center justify-center rounded p-1 text-[var(--stone-gray)] hover:text-[var(--editor-accent)] hover:bg-[var(--editor-accent)]/8 transition-colors"
-      >
-        <FileDown className="h-3.5 w-3.5" />
       </button>
     </span>
   )

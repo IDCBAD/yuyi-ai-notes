@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { isAdminAuthenticated, COOKIE_NAME, generateApiToken } from '@/lib/admin-auth'
 
@@ -27,12 +27,12 @@ async function requireCookieAuth(req: NextRequest): Promise<boolean> {
 // GET: 列出所有 Token（不返回完整 token，只返回前缀）
 export async function GET(req: NextRequest) {
   if (!(await requireCookieAuth(req))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const env = await getAppCloudflareEnv()
   if (!env?.DB) {
-    return NextResponse.json({ error: '数据库未配置' }, { status: 500 })
+    return Response.json({ error: '数据库未配置' }, { status: 500 })
   }
 
   await ensureTokensTable(env.DB)
@@ -43,25 +43,25 @@ export async function GET(req: NextRequest) {
               FROM api_tokens ORDER BY created_at DESC`)
     .all()
 
-  return NextResponse.json({ tokens: results })
+  return Response.json({ tokens: results })
 }
 
 // POST: 创建新 Token
 export async function POST(req: NextRequest) {
   if (!(await requireCookieAuth(req))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const env = await getAppCloudflareEnv()
   if (!env?.DB) {
-    return NextResponse.json({ error: '数据库未配置' }, { status: 500 })
+    return Response.json({ error: '数据库未配置' }, { status: 500 })
   }
 
   await ensureTokensTable(env.DB)
 
   const { name } = (await req.json()) as { name?: string }
   if (!name || typeof name !== 'string' || !name.trim()) {
-    return NextResponse.json({ error: '请输入 Token 名称' }, { status: 400 })
+    return Response.json({ error: '请输入 Token 名称' }, { status: 400 })
   }
 
   const token = generateApiToken()
@@ -72,23 +72,23 @@ export async function POST(req: NextRequest) {
     .run()
 
   // 创建时返回完整 token（仅此一次）
-  return NextResponse.json({ success: true, token, name: name.trim() })
+  return Response.json({ success: true, token, name: name.trim() })
 }
 
 // DELETE: 删除 Token
 export async function DELETE(req: NextRequest) {
   if (!(await requireCookieAuth(req))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const env = await getAppCloudflareEnv()
   if (!env?.DB) {
-    return NextResponse.json({ error: '数据库未配置' }, { status: 500 })
+    return Response.json({ error: '数据库未配置' }, { status: 500 })
   }
 
   const { id } = (await req.json()) as { id?: number | string }
   if (!id) {
-    return NextResponse.json({ error: '缺少 Token ID' }, { status: 400 })
+    return Response.json({ error: '缺少 Token ID' }, { status: 400 })
   }
 
   await env.DB
@@ -96,5 +96,5 @@ export async function DELETE(req: NextRequest) {
     .bind(id)
     .run()
 
-  return NextResponse.json({ success: true })
+  return Response.json({ success: true })
 }

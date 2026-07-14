@@ -112,9 +112,9 @@ export default async function AdminPostsPage({
           </div>
         </div>
       ) : (
-        <div className="bg-[var(--editor-panel)] rounded-xl border border-[var(--editor-line)] overflow-hidden">
+        <div className="bg-[var(--editor-panel)] rounded-xl border border-[var(--editor-line)] overflow-visible">
           {/* 表头 */}
-          <div className="hidden md:grid grid-cols-[50px_1fr_120px_90px_200px] gap-3 px-5 py-3.5 border-b border-[var(--editor-line)] bg-[var(--editor-soft)]">
+          <div className="hidden md:grid grid-cols-[50px_minmax(0,1fr)_180px_110px_260px] gap-3 px-5 py-3.5 border-b border-[var(--editor-line)] bg-[var(--editor-soft)]">
             <span className="text-xs font-semibold text-[var(--editor-muted)] uppercase tracking-wide text-center">
               状态
             </span>

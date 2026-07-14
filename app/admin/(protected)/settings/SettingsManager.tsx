@@ -8,13 +8,8 @@ import { NavLinksEditor } from './NavLinksEditor'
 import { CustomJsEditor } from './CustomJsEditor'
 import { ThemeManager } from './ThemeManager'
 import { CategoryManager } from '../categories/CategoryManager'
-import { AiProviderManager } from './AiProviderManager'
-import { AiActionsManager } from './AiActionsManager'
-import { AiImageProviderManager } from './AiImageProviderManager'
-import { AiImageActionsManager } from './AiImageActionsManager'
-import { AiPostGeneratorsManager } from './AiPostGeneratorsManager'
 import { RuntimeCapabilitiesPanel } from './RuntimeCapabilitiesPanel'
-import { ThirdPartyPublishingManager } from './ThirdPartyPublishingManager'
+import { ApiTokensManager } from './ApiTokensManager'
 
 interface Category {
   name: string
@@ -117,7 +112,7 @@ export function SettingsManager({
             </div>
           )}
           <p className="text-sm text-[var(--editor-muted)]">
-            此代码会注入到所有页面的 &lt;head&gt; 中，适合添加统计代码（如 Google Analytics、百度统计等）。
+            这段代码会注入到所有页面的 &lt;head&gt; 中，适合添加统计代码。
           </p>
           <CustomJsEditor
             initialValue={initialCustomJs}
@@ -141,33 +136,8 @@ export function SettingsManager({
     },
     {
       id: 'tokens',
-      label: '第三方发布',
-      content: <ThirdPartyPublishingManager />,
-    },
-    {
-      id: 'ai-provider',
-      label: 'AI 模型',
-      content: <AiProviderManager />,
-    },
-    {
-      id: 'ai-actions',
-      label: 'AI 操作',
-      content: <AiActionsManager />,
-    },
-    {
-      id: 'ai-image-provider',
-      label: '图片模型',
-      content: <AiImageProviderManager />,
-    },
-    {
-      id: 'ai-image-actions',
-      label: '图片提示',
-      content: <AiImageActionsManager />,
-    },
-    {
-      id: 'ai-post-generators',
-      label: '文章生成',
-      content: <AiPostGeneratorsManager />,
+      label: '发布 Token',
+      content: <ApiTokensManager />,
     },
     {
       id: 'runtime',
