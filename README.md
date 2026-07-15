@@ -13,11 +13,6 @@
 
 - 线上地址：[https://blog.yuyi-ai.top](https://blog.yuyi-ai.top)
 - GitHub 仓库：[https://github.com/IDCBAD/yuyi-ai-notes](https://github.com/IDCBAD/yuyi-ai-notes)
-- package name：`yuyi-ai-notes`
-- Worker name：`yuyi-ai-notes`
-- D1：`yuyi-ai-notes-db`
-- R2：`yuyi-ai-notes-images`
-- KV：`yuyi-ai-notes-cache`
 
 ## 保留功能
 
