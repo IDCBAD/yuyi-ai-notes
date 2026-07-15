@@ -21,9 +21,16 @@ service = "yuyi-ai-notes"
 
 [[d1_databases]]
 binding = "DB"
+database_name = "yuyi-ai-notes-db"
+database_id = "c8cf3a03-c298-429c-907d-8e03bb6ef6ca"
 
 [[r2_buckets]]
 binding = "IMAGES"
+bucket_name = "yuyi-ai-notes-images"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "4a79964055b14c61946851712e0593eb"
 
 # Optional Queue binding for background jobs. Uncomment after creating the queue.
 # [[queues.producers]]
@@ -34,7 +41,7 @@ binding = "IMAGES"
 # queue = "yuyi-ai-notes-background-jobs"
 
 [vars]
-NEXT_PUBLIC_SITE_URL = "https://your-domain.com"
+NEXT_PUBLIC_SITE_URL = "https://blog.yuyi-ai.top"
 # Optional enhancement flags. Leave unset/disabled for open-source or low-cost deployments.
 # ENABLE_BACKGROUND_JOBS = "true"
 # ENABLE_VECTOR_SEARCH = "true"
